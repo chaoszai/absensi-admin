@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Kontrak - {{contractNo}}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 14mm 18mm 14mm;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.45;
+      color: #111;
+      background: #fff;
+    }
+
+    .small { font-size: 10pt; }
+    .muted { color: #444; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #000;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .header .left { font-weight: 700; letter-spacing: .3px; }
+    .header .right { text-align: right; font-size: 10pt; }
+
+    h1 {
+      font-size: 14pt;
+      text-align: center;
+      margin: 14px 0 10px 0;
+      letter-spacing: .4px;
+    }
+
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 10px 0;
+    }
+    .meta-table td { padding: 2px 0; vertical-align: top; }
+    .meta-table .label { width: 110px; }
+    .meta-table .sep { width: 10px; }
+
+    .para { margin: 8px 0; text-align: justify; }
+
+    .section-title {
+      font-weight: 700;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .pasal {
+      margin-top: 14px;
+      page-break-inside: avoid;
+    }
+    .pasal .pasal-title {
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .pasal .pasal-subtitle {
+      font-weight: 700;
+      text-align: center;
+      margin-top: -2px;
+      margin-bottom: 8px;
+    }
+
+    ol { margin: 6px 0 6px 18px; }
+    li { margin: 4px 0; text-align: justify; }
+
+    .ttd-wrap {
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .ttd {
+      text-align: center;
+      font-weight: 700;
+    }
+    .ttd .line {
+      margin-top: 46px;
+      border-bottom: 1px solid #000;
+      height: 1px;
+    }
+    .ttd .name {
+      margin-top: 6px;
+      font-weight: 700;
+    }
+
+    /* Footer page number for print */
+    .print-footer {
+      position: fixed;
+      bottom: 8mm;
+      left: 14mm;
+      right: 14mm;
+      font-size: 10pt;
+      display: flex;
+      justify-content: space-between;
+      color: #222;
+    }
+
+    /* puppeteer supports these counters in print */
+    .page-number:before { content: counter(page); }
+    .page-count:before { content: counter(pages); }
+
+    /* Optional: force a new page (kalau dibutuhkan) */
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+
+<body>
+  <!-- header -->
+  <div class="header">
+    <div class="left">
+      {{companyName}}
+    </div>
+    <div class="right">
+      <div><b>Nomor</b> {{contractNo}}</div>
+      <div class="small muted">{{docCode}}</div>
+    </div>
+  </div>
+
+  <h1>SURAT PERJANJIAN KERJA</h1>
+
+  <div class="para">
+    Perjanjian ini dibuat dan ditandatangani pada hari <b>{{dayName}}</b> tanggal <b>{{signDateLong}}</b> antara:
+  </div>
+
+  <!-- PIHAK PERTAMA -->
+  <table class="meta-table">
+    <tr>
+      <td class="label">Nama</td><td class="sep">:</td><td><b>{{pihak1Name}}</b></td>
+    </tr>
+    <tr>
+      <td class="label">Alamat</td><td class="sep">:</td><td>{{pihak1Address}}</td>
+    </tr>
+    <tr>
+      <td class="label">Jabatan</td><td class="sep">:</td><td>{{pihak1Role}}</td>
+    </tr>
+  </table>
+
+  <div class="para">
+    Dalam hal ini bertindak untuk dan atas nama Pemilik Perusahaan <b>{{companyName}}</b> yang berkedudukan di
+    <b>{{companyAddress}}</b>. Jenis Usaha <b>{{companyBusinessType}}</b>, selanjutnya dalam surat perjanjian ini disebut sebagai
+    <b>PIHAK PERTAMA</b> (Pemilik Pekerjaan). Yang diwakilkan oleh <b>{{pihak1Representative}}</b> sebagai <b>{{pihak1RepRole}}</b>.
+  </div>
+
+  <!-- PIHAK KEDUA -->
+  <table class="meta-table" style="margin-top:10px;">
+    <tr>
+      <td class="label">Nama</td><td class="sep">:</td><td><b>{{employeeName}}</b></td>
+    </tr>
+    <tr>
+      <td class="label">Jenis Kelamin</td><td class="sep">:</td><td>{{employeeGender}}</td>
+    </tr>
+    <tr>
+      <td class="label">Tempat, Tgl Lahir</td><td class="sep">:</td><td>{{employeeBirthPlace}}, {{employeeBirthDateLong}}</td>
+    </tr>
+    <tr>
+      <td class="label">Umur</td><td class="sep">:</td><td>{{employeeAge}}</td>
+    </tr>
+    <tr>
+      <td class="label">Agama</td><td class="sep">:</td><td>{{employeeReligion}}</td>
+    </tr>
+    <tr>
+      <td class="label">Pendidikan</td><td class="sep">:</td><td>{{employeeEducation}}</td>
+    </tr>
+    <tr>
+      <td class="label">Status Perkawinan</td><td class="sep">:</td><td>{{employeeMaritalStatus}}</td>
+    </tr>
+    <tr>
+      <td class="label">Alamat</td><td class="sep">:</td><td>{{employeeAddress}}</td>
+    </tr>
+    <tr>
+      <td class="label">No. KTP</td><td class="sep">:</td><td>{{employeeKtp}}</td>
+    </tr>
+    <tr>
+      <td class="label">No. Pegawai</td><td class="sep">:</td><td>{{empNo}}</td>
+    </tr>
+    <tr>
+      <td class="label">Cabang</td><td class="sep">:</td><td>{{branchName}}</td>
+    </tr>
+  </table>
+
+  <div class="para">
+    Dalam hal ini bertindak untuk dan atas nama sendiri, selanjutnya disebut sebagai <b>PIHAK KEDUA</b> (Pekerja).
+  </div>
+
+  <div class="para">
+    Dengan ini bersepakat mengadakan Perjanjian Ikatan Kerja dalam rangka menjalani Ikatan Kerja bagi Pegawai,
+    untuk selanjutnya disebut <b>PERJANJIAN</b>, dengan ketentuan dan syarat-syarat sebagai berikut:
+  </div>
+
+  <!-- PASAL 1 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 1</div>
+    <div class="pasal-subtitle">Pengangkatan Kerja Pihak Kedua</div>
+
+    <div class="para">
+      Dengan ini menyatakan menerima PIHAK KEDUA sebagai Karyawan <b>{{companyLegalName}}</b> yang berkedudukan di
+      <b>{{companyAddress}}</b>. PIHAK KEDUA bersedia menjadi pegawai kontrak sesuai dengan tugas dan tanggung jawab yang
+      diberikan kepadanya serta menaati setiap peraturan yang dikeluarkan oleh perusahaan.
+    </div>
+  </div>
+
+  <!-- PASAL 2 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 2</div>
+    <div class="pasal-subtitle">Masa Kerja, Tugas dan Tanggung Jawab</div>
+
+    <ol>
+      <li>
+        Perjanjian kerja ini berlaku untuk jangka waktu <b>{{contractDurationText}}</b> terhitung sejak tanggal
+        <b>{{startDateLong}}</b> dan berakhir pada tanggal <b>{{endDateLong}}</b>.
+      </li>
+      <li>
+        PIHAK KEDUA bertugas dan mempunyai tanggung jawab sebagai karyawan selama masa kontrak berjalan sesuai ketentuan perusahaan.
+      </li>
+    </ol>
+  </div>
+
+  <!-- PASAL 3 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 3</div>
+    <div class="pasal-subtitle">Gaji</div>
+
+    <div class="para">
+      PIHAK KEDUA memperoleh gaji dari PIHAK PERTAMA, dengan rincian gaji pokok dan tunjangan sesuai rincian dalam slip gaji
+      yang dibayarkan pada tanggal <b>{{paydayText}}</b> setiap bulan.
+    </div>
+  </div>
+
+  <!-- PASAL 4 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 4</div>
+    <div class="pasal-subtitle">Waktu Kerja</div>
+
+    <div class="para">
+      Waktu kerja ditentukan <b>{{workHoursText}}</b> dengan istirahat <b>{{breakText}}</b>, jumlah hari kerja setiap pekan sebanyak
+      <b>{{workDaysText}}</b> dengan <b>{{offDayText}}</b>, serta bersedia lembur jika dibutuhkan dengan pembayaran lembur sesuai
+      kesepakatan kedua belah pihak.
+    </div>
+  </div>
+
+  <!-- PASAL 5 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 5</div>
+    <div class="pasal-subtitle">Sanksi Pihak Kedua</div>
+
+    <div class="para">
+      PIHAK KEDUA wajib menaati peraturan-peraturan yang dikeluarkan oleh perusahaan maupun pimpinan. Pelanggaran terhadap peraturan
+      dapat mengakibatkan pemberian sanksi berupa:
+    </div>
+    <ol>
+      <li>Teguran lisan</li>
+      <li>Teguran tertulis</li>
+      <li>Pemberhentian kontrak kerja</li>
+    </ol>
+    <div class="para">
+      Sanksi di atas bukan tahapan pemberian sanksi. Sanksi diberikan sesuai tingkat pelanggaran berdasarkan pertimbangan pimpinan.
+    </div>
+  </div>
+
+  <!-- PASAL 6 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 6</div>
+    <div class="pasal-subtitle">Perpanjangan Masa Kontrak</div>
+
+    <div class="para">
+      Apabila PIHAK PERTAMA masih membutuhkan PIHAK KEDUA sebagai pegawai setelah masa kerja berakhir, maka perjanjian ini dapat
+      diperpanjang atas persetujuan PIHAK KEDUA.
+    </div>
+  </div>
+
+  <!-- PASAL 7 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 7</div>
+    <div class="pasal-subtitle">Pemutusan Kontrak Sebelum Waktunya</div>
+
+    <ol>
+      <li>
+        Kontrak dapat berakhir sebelum waktunya apabila PIHAK KEDUA tidak memenuhi tugasnya atau mengabaikan aturan perusahaan.
+        Dalam hal ini, PIHAK PERTAMA tidak berkewajiban memberikan pesangon kepada PIHAK KEDUA.
+      </li>
+      <li>
+        Kontrak dapat berakhir sebelum waktunya apabila PIHAK PERTAMA tidak memenuhi kewajiban pembayaran balas jasa kepada PIHAK KEDUA
+        selama dua bulan berturut-turut, dan PIHAK PERTAMA wajib melunasi kewajibannya kepada PIHAK KEDUA.
+      </li>
+      <li>
+        Kontrak dapat berakhir pada kondisi khusus apabila PIHAK KEDUA tidak mampu memenuhi kewajibannya karena ketidakmampuan fisik maupun hukum.
+      </li>
+      <li>
+        Bila PIHAK KEDUA memutuskan kontrak sepihak sebelum berakhirnya masa perjanjian, maka PIHAK KEDUA wajib mengganti biaya penalti
+        sebesar <b>{{resignPenaltyText}}</b> kepada PIHAK PERTAMA, serta wajib memberi tahu <b>{{resignNoticeText}}</b> sebelum mengundurkan diri
+        dan membantu proses serah terima kepada pengganti sampai mampu.
+      </li>
+    </ol>
+  </div>
+
+  <!-- PASAL 8 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 8</div>
+    <div class="pasal-subtitle">Penyelesaian Perselisihan</div>
+
+    <div class="para">
+      Apabila terjadi perselisihan akibat pelaksanaan perjanjian ini, para pihak sepakat menyelesaikan terlebih dahulu secara musyawarah.
+      Apabila tidak terselesaikan, maka para pihak memilih domisili hukum di Kantor Pengadilan yang berwenang.
+    </div>
+  </div>
+
+  <!-- PASAL 9 -->
+  <div class="pasal">
+    <div class="pasal-title">Pasal 9</div>
+    <div class="pasal-subtitle">Penutup</div>
+
+    <ol>
+      <li>
+        Apabila ada hal-hal yang belum diatur atau belum cukup diatur dalam perjanjian ini, maka para pihak akan mengaturnya bersama
+        dalam suatu addendum.
+      </li>
+      <li>
+        Tiap addendum merupakan satu kesatuan yang tidak terpisahkan dari perjanjian ini.
+      </li>
+      <li>
+        Perjanjian ini dibuat dan ditandatangani di atas kertas bermaterai cukup dalam rangkap 2 (dua) yang masing-masing berlaku sebagai aslinya.
+      </li>
+    </ol>
+
+    <div class="para">
+      Demikian surat perjanjian ini ditandatangani oleh PIHAK PERTAMA dan PIHAK KEDUA setelah seluruh isi dibaca dan dipahami.
+    </div>
+  </div>
+
+  <!-- TTD -->
+  <div class="para" style="margin-top:18px;">
+    {{signCity}}, {{signDateLong}}
+  </div>
+
+  <div class="ttd-wrap">
+    <div class="ttd">
+      Pihak Pertama<br/>
+      {{pihak1SignTitle}}
+      <div class="line"></div>
+      <div class="name">({{pihak1SignName}})</div>
+    </div>
+
+    <div class="ttd">
+      Pihak Kedua<br/>
+      Karyawan
+      <div class="line"></div>
+      <div class="name">({{employeeName}})</div>
+    </div>
+  </div>
+</body>
+</html>

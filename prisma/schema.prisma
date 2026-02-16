@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =========================
+// CORE MASTER
+// =========================
+
+model Branch {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  lat         Float   @default(0)
+  lng         Float   @default(0)
+  radiusMeter Int     @default(200)
+  pinHash     String?
+  isActive    Boolean @default(true)
+
+  employees     Employee[]
+  shiftRules    ShiftRule[]
+  kioskSessions KioskSession[]
+  attendances   AttendanceLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Employee {
+  id       String @id @default(cuid())
+  empNo    String @unique
+  name     String
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  role           String  @default("STAFF") // STAFF | ADMIN | SPV
+  grade          String  @default("A")
+  salaryOverride Int?
+  isActive       Boolean @default(true)
+
+  // identity
+  gender        String? // L / P
+  birthPlace    String?
+  birthDate     DateTime?
+  religion      String?
+  education     String?
+  maritalStatus String?
+  address       String?
+  ktpNo         String?
+
+  attendances   AttendanceLog[]
+  contracts     EmployeeContract[]
+  requests      Request[]
+  kioskSessions KioskSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+}
+
+// =========================
+// SHIFT RULES
+// =========================
+
+model ShiftRule {
+  id       String @id @default(cuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  code String // SHIFT_1, SHIFT_2, ...
+  name String // Shift 1, Shift 2, ...
+
+  // jam disimpan string biar simpel: "08:00"
+  workStart   String @default("08:00")
+  workEnd     String @default("17:00")
+  windowStart String @default("07:30")
+  windowEnd   String @default("09:30")
+
+  lateToleranceMin  Int @default(0)
+  latePenaltyPerMin Int @default(0)
+  dailyRate         Int @default(100000)
+  absencePenalty    Int @default(50000)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([branchId, code], name: "branchId_code")
+  @@index([branchId])
+}
+
+// =========================
+// KIOSK SESSION (LOGIN)
+// =========================
+
+model KioskSession {
+  id       String @id @default(cuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  token     String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([branchId])
+  @@index([employeeId])
+  @@index([expiresAt])
+}
+
+// =========================
+// ATTENDANCE LOG
+// =========================
+
+model AttendanceLog {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  date      DateTime
+  type      String // IN | OUT
+  shiftCode String? // SHIFT_1...
+  mode      String   @default("NORMAL") // NORMAL | OFFSITE | WFH
+
+  lat         Float?
+  lng         Float?
+  distanceM   Float?
+  lateMinutes Int    @default(0)
+
+  // SQLite aman pakai String (bisa isi JSON string kalau mau)
+  flags String? // contoh: '["OUT_OF_RADIUS","MISSING_OUT"]'
+  note  String?
+
+  finalStatus String @default("VALID") // VALID | NEED_REVIEW | REJECTED
+
+  createdAt DateTime @default(now())
+
+  @@index([employeeId, date])
+  @@index([branchId, date])
+}
+
+// =========================
+// REQUESTS (IZIN / LEMBUR / CUTI)
+// =========================
+
+model Request {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  type     String // IZIN | LEMBUR | CUTI
+  dateFrom DateTime
+  dateTo   DateTime
+  reason   String?
+  status   String   @default("PENDING") // PENDING | APPROVED | REJECTED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([type])
+}
+
+// =========================
+// EMPLOYEE CONTRACTS
+// =========================
+
+model EmployeeContract {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  contractNo String   @unique
+  startDate  DateTime
+  endDate    DateTime
+
+  template String
+  status   String @default("ACTIVE") // ACTIVE | ENDED | CANCELLED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+}
