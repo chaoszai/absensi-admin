@@ -1,63 +1,64 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // BRANCHES
-  const branches = [
-    { code: "CBG_001", name: "Garut", lat: -7.214, lng: 107.908, radiusMeter: 200, isActive: true },
-    { code: "CBG_002", name: "Klaten", lat: -7.705, lng: 110.606, radiusMeter: 200, isActive: true },
-    { code: "CBG_030", name: "Yogya",  lat: -7.7956, lng: 110.3695, radiusMeter: 200, isActive: true },
-  ];
+  // reset biar gak dobel
+  await prisma.attendance.deleteMany();
+  await prisma.shiftRule.deleteMany();
+  await prisma.employee.deleteMany();
+  await prisma.branch.deleteMany();
 
-  for (const b of branches) {
-    await prisma.branch.upsert({ where: { code: b.code }, update: b, create: b });
-  }
+  const solo = await prisma.branch.create({ data: { name: "Cabang Solo" } });
+  const klaten = await prisma.branch.create({ data: { name: "Cabang Klaten" } });
 
-  const garut = await prisma.branch.findUnique({ where: { code: "CBG_001" } });
-  const klaten = await prisma.branch.findUnique({ where: { code: "CBG_002" } });
-  const yogya = await prisma.branch.findUnique({ where: { code: "CBG_030" } });
-  if (!garut || !klaten || !yogya) throw new Error("Branch seed gagal");
-
-  // SHIFT RULES
-  const baseShifts = [
-    { code: "SHIFT_1", name: "SHIFT 1 (Pagi)",  windowStart: "05:00", windowEnd: "10:59", workStart: "08:00", lateToleranceMin: 10, isActive: true },
-    { code: "SHIFT_2", name: "SHIFT 2 (Siang)", windowStart: "11:00", windowEnd: "15:59", workStart: "13:00", lateToleranceMin: 10, isActive: true },
-    { code: "SHIFT_3", name: "SHIFT 3 (Sore)",  windowStart: "16:00", windowEnd: "22:59", workStart: "17:00", lateToleranceMin: 10, isActive: true },
-    { code: "SHIFT_4", name: "SHIFT 4 (Night)", windowStart: "23:00", windowEnd: "04:59", workStart: "23:00", lateToleranceMin: 10, isActive: false },
-  ];
-
-  for (const branchId of [garut.id, klaten.id, yogya.id]) {
-    for (const s of baseShifts) {
-      await prisma.shiftRule.upsert({
-        where: { branchId_code: { branchId, code: s.code } },
-        update: s,
-        create: { branchId, ...s },
-      });
-    }
-  }
-
-  // EMPLOYEES
-  await prisma.employee.upsert({
-    where: { empNo: "EMP027" },
-    update: {},
-    create: { empNo: "EMP027", name: "Aji Fajar Permana", branchId: klaten.id, role: "SPV", grade: "A", isActive: true },
+  const budi = await prisma.employee.create({
+    data: { empNo: "EMP001", name: "Budi", branchId: solo.id },
   });
 
-  await prisma.employee.upsert({
-    where: { empNo: "EMP001" },
-    update: {},
-    create: { empNo: "EMP001", name: "Budi", branchId: yogya.id, role: "STAFF", grade: "G1", isActive: true },
+  const siti = await prisma.employee.create({
+    data: { empNo: "EMP002", name: "Siti", branchId: klaten.id },
   });
 
-  await prisma.employee.upsert({
-    where: { empNo: "EMP002" },
-    update: {},
-    create: { empNo: "EMP002", name: "Siti", branchId: klaten.id, role: "STAFF", grade: "G1", isActive: true },
+  await prisma.shiftRule.create({
+    data: {
+      branchId: solo.id,
+      dailyRate: 100000,
+      latePenaltyPerMin: 1000,
+      absencePenalty: 50000,
+    },
   });
 
-  console.log("✅ Seed OK");
+  await prisma.shiftRule.create({
+    data: {
+      branchId: klaten.id,
+      dailyRate: 120000,
+      latePenaltyPerMin: 1500,
+      absencePenalty: 60000,
+    },
+  });
+
+  await prisma.attendance.createMany({
+    data: [
+      // Budi
+      { employeeId: budi.id, date: new Date("2026-01-31"), lateMinutes: 0, status: "PRESENT" },
+      { employeeId: budi.id, date: new Date("2026-02-01"), lateMinutes: 7, status: "PRESENT" },
+      { employeeId: budi.id, date: new Date("2026-02-02"), lateMinutes: 0, status: "ABSENT" },
+
+      // Siti
+      { employeeId: siti.id, date: new Date("2026-02-01"), lateMinutes: 2, status: "PRESENT" },
+      { employeeId: siti.id, date: new Date("2026-02-02"), lateMinutes: 0, status: "PRESENT" },
+    ],
+  });
+
+  console.log("✅ Seed selesai");
 }
 
 main()
-  .catch((e) => (console.error(e), process.exit(1)))
-  .finally(async () => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+

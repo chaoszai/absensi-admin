@@ -1,5 +1,12 @@
+export type AttendanceStatus =
+  | "on_time"
+  | "late"
+  | "missing_in"
+  | "missing_out"
+  | "leave";
+
 export type AttendanceRow = {
-  date: string;
+  date: string; // YYYY-MM-DD
   employeeName: string;
   employeeId: string;
 
@@ -13,14 +20,18 @@ export type AttendanceRow = {
   checkOut?: string;
   checkOutPhoto?: string;
 
-  // lokasi dari app absensi (mobile)
+  lateMinutes?: number;
+
+  note?: string;
+
+  // IMPORTANT: optional, bisa di-set dari merge approvals
+  status?: AttendanceStatus;
+
+  // lokasi (optional)
   checkInLat?: number;
   checkInLng?: number;
   checkOutLat?: number;
   checkOutLng?: number;
-
-  lateMinutes?: number;
-  note?: string;
 };
 
 export const attendanceDummy: AttendanceRow[] = [
@@ -33,13 +44,13 @@ export const attendanceDummy: AttendanceRow[] = [
     shift: "SHIFT 1",
     checkIn: "07:03",
     checkInPhoto: "https://picsum.photos/100?1",
-    checkInLat: -7.7052,
-    checkInLng: 110.6061,
     checkOut: "15:01",
     checkOutPhoto: "https://picsum.photos/100?2",
-    checkOutLat: -7.7052,
-    checkOutLng: 110.6061,
     lateMinutes: 3,
+    checkInLat: -7.7052,
+    checkInLng: 110.6062,
+    checkOutLat: -7.7052,
+    checkOutLng: 110.6062,
   },
   {
     date: "2026-02-05",
@@ -49,7 +60,7 @@ export const attendanceDummy: AttendanceRow[] = [
     branchCode: "CBG_030",
     shift: "SHIFT 2",
     note: "WFH — Laptop bermasalah",
-    // contoh: gak ada lokasi karena belum absen masuk
+    // kalau belum ada absen masuk, nanti status auto = missing_in
   },
   {
     date: "2026-02-04",
@@ -59,5 +70,6 @@ export const attendanceDummy: AttendanceRow[] = [
     branchCode: "CBG_001",
     shift: "SHIFT 1",
     note: "Izin — Sakit demam",
+    // status nanti bisa jadi leave kalau ada approval approved
   },
 ];

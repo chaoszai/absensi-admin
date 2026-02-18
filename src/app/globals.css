@@ -36,3 +36,25 @@ body {
   background-clip: padding-box;
 }
 body { outline: 6px solid red !important; }
+/* Normalize date input UI (Chrome/Safari) */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Remove extra inner padding / decorations (WebKit) */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  padding: 0;
+}
+
+/* Tame the calendar icon area so it doesn't look like a pill */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.75;
+  cursor: pointer;
+  margin-left: 8px;
+}

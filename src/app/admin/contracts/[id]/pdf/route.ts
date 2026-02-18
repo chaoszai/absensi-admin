@@ -162,7 +162,18 @@ export async function GET(req: Request, ctx: { params?: { id?: string } }) {
     const empNo = safe(c.employee?.empNo);
     const branchName = safe(c.employee?.branch?.name);
 
-    // Data employee yang belum ada di schema → isi default dulu
+    // ✅ employee placeholders (HARUS di luar object vars)
+    const employeeGender = safe(c.employee?.gender);
+    const employeeBirthPlace = safe(c.employee?.birthPlace);
+    const employeeBirthDateLong = c.employee?.birthDate
+      ? fmtLongID(c.employee.birthDate)
+      : "-";
+    const employeeReligion = safe(c.employee?.religion);
+    const employeeEducation = safe(c.employee?.education);
+    const employeeMaritalStatus = safe(c.employee?.maritalStatus);
+    const employeeAddress = safe(c.employee?.address);
+    const employeeKtp = safe(c.employee?.ktpNo);
+
     const vars: Record<string, string> = {
       // basic
       contractNo: escapeHtml(safe(c.contractNo)),
@@ -197,15 +208,14 @@ export async function GET(req: Request, ctx: { params?: { id?: string } }) {
       pihak1SignName: escapeHtml(COMPANY.pihak1SignName),
 
       // employee detail placeholders
-      const employeeGender = safe(c.employee.gender);
-      const employeeBirthPlace = safe(c.employee.birthPlace);
-      const employeeBirthDateLong = c.employee.birthDate ? fmtLongID(c.employee.birthDate) : "-";
-      const employeeReligion = safe(c.employee.religion);
-      const employeeEducation = safe(c.employee.education);
-      const employeeMaritalStatus = safe(c.employee.maritalStatus);
-      const employeeAddress = safe(c.employee.address);
-      const employeeKtp = safe(c.employee.ktpNo);
-
+      employeeGender: escapeHtml(employeeGender),
+      employeeBirthPlace: escapeHtml(employeeBirthPlace),
+      employeeBirthDateLong: escapeHtml(employeeBirthDateLong),
+      employeeReligion: escapeHtml(employeeReligion),
+      employeeEducation: escapeHtml(employeeEducation),
+      employeeMaritalStatus: escapeHtml(employeeMaritalStatus),
+      employeeAddress: escapeHtml(employeeAddress),
+      employeeKtp: escapeHtml(employeeKtp),
 
       // terms
       contractDurationText: escapeHtml(DEFAULT_TERMS.contractDurationText),
@@ -219,7 +229,9 @@ export async function GET(req: Request, ctx: { params?: { id?: string } }) {
     };
 
     const bodyOrFull = fillTemplate(tpl, vars);
-    const finalHtml = bodyOrFull.includes("<html") ? bodyOrFull : wrapHtml(bodyOrFull);
+    const finalHtml = bodyOrFull.includes("<html")
+      ? bodyOrFull
+      : wrapHtml(bodyOrFull);
 
     // ✅ DEBUG INFO
     if (url.searchParams.get("debug") === "info") {
@@ -262,11 +274,7 @@ export async function GET(req: Request, ctx: { params?: { id?: string } }) {
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
-
-      // 🔥 ini yang ngilangin "Hal 0 dari 0"
       displayHeaderFooter: false,
-
-      // konsisten sama @page
       margin: {
         top: "30mm",
         right: "20mm",

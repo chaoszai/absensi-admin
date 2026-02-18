@@ -1,47 +1,55 @@
 import { prisma } from "@/lib/db";
+import { json } from "@/lib/kioskAuth";
+
+function randToken() {
+  return "kiosk_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
-  const branchId = String(body.branchId || "");
-  const employeeId = String(body.employeeId || "");
-  const pin = String(body.pin || "");
+  try {
+    const body = await req.json().catch(() => ({}));
+    const { branchId, employeeId, pin } = body || {};
 
-  if (!branchId || !employeeId || !pin) {
-    return Response.json({ ok: false, message: "Data login belum lengkap." }, { status: 400 });
-  }
+    if (!branchId || !employeeId || !pin) {
+      return json({ ok: false, message: "Cabang, karyawan, dan PIN wajib diisi." }, { status: 400 });
+    }
 
-  // Dummy PIN sementara (nanti bisa pakai pinHash per cabang)
-  if (pin !== "1234") {
-    return Response.json({ ok: false, message: "PIN salah." }, { status: 401 });
-  }
+    // dummy pin dulu
+    if (String(pin) !== "1234") {
+      return json({ ok: false, message: "PIN salah." }, { status: 401 });
+    }
 
-  const branch = await prisma.branch.findUnique({ where: { id: branchId } });
-  if (!branch || !branch.isActive) {
-    return Response.json({ ok: false, message: "Cabang tidak valid." }, { status: 400 });
-  }
+    const branch = await prisma.branch.findUnique({ where: { id: branchId } });
+    const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
 
-  const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
-  if (!employee || !employee.isActive || employee.branchId !== branchId) {
-    return Response.json({ ok: false, message: "Karyawan tidak valid." }, { status: 400 });
-  }
+    if (!branch || !employee) return json({ ok: false, message: "Data tidak ditemukan." }, { status: 404 });
+    if (employee.branchId !== branchId)
+      return json({ ok: false, message: "Karyawan tidak terdaftar di cabang ini." }, { status: 400 });
 
-  // create session token
-  const token = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12); // 12 jam
+    // hapus session lama karyawan ini biar bersih (opsional)
+    await prisma.kioskSession.deleteMany({ where: { employeeId } });
 
-  await prisma.kioskSession.create({
-    data: {
-      branchId,
-      employeeId,
+    const token = randToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 jam
+
+    await prisma.kioskSession.create({
+      data: { branchId, employeeId, token, expiresAt },
+    });
+
+    return json({
+      ok: true,
       token,
-      expiresAt,
-    },
-  });
-
-  return Response.json({
-    ok: true,
-    token,
-    branch: { id: branch.id, code: branch.code, name: branch.name, lat: branch.lat, lng: branch.lng, radiusMeter: branch.radiusMeter },
-    employee: { id: employee.id, empNo: employee.empNo, name: employee.name, branchId: employee.branchId },
-  });
+      session: {
+        token,
+        employeeId: employee.id,
+        employeeName: employee.name,
+        empNo: employee.empNo,
+        branchId: branch.id,
+        branchCode: branch.code,
+        branchName: branch.name,
+      },
+    });
+  } catch (e: any) {
+    return json({ ok: false, message: e?.message || "Login error" }, { status: 500 });
+  }
 }
