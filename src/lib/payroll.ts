@@ -43,7 +43,7 @@ export async function getPayrollPreview(params: {
 
   const empIds = employees.map((e) => e.id);
 
-  const attendances = await prisma.attendance.findMany({
+  const attendances = await prisma.attendanceLog.findMany({
     where: {
       employeeId: { in: empIds },
       date: { gte: from, lte: to },
