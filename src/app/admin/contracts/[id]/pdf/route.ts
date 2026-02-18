@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import puppeteer from "puppeteer";
 import fs from "node:fs/promises";
@@ -132,23 +132,25 @@ ${body}
 </html>`;
 }
 
-export async function GET(req: Request, ctx: { params?: { id?: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const url = new URL(req.url);
+    const url = req.nextUrl;
 
-    // ambil id robust
-    const idFromParams = ctx?.params?.id;
-    const parts = url.pathname.split("/").filter(Boolean);
-    const idx = parts.indexOf("contracts");
-    const idFromPath = idx >= 0 ? parts[idx + 1] : undefined;
-    const id = idFromParams || idFromPath;
+    // ✅ Next.js kamu ngetype params sebagai Promise
+    const { id } = await context.params;
 
-    if (!id) return NextResponse.json({ message: "Missing id" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ message: "Missing id" }, { status: 400 });
+    }
 
     const c = await prisma.employeeContract.findUnique({
       where: { id },
       include: { employee: { include: { branch: true } } },
     });
+
     if (!c) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
     const master = await readMasterTemplate();
