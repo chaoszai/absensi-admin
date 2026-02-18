@@ -82,19 +82,18 @@ export function EmployeeFormModal({
   const seed = useMemo(() => {
     const d = editing;
 
-    const birthDate =
-      d?.birthDate
-        ? typeof d.birthDate === "string"
-          ? d.birthDate.slice(0, 10)
-          : new Date(d.birthDate).toISOString().slice(0, 10)
-        : "";
+    const birthDate = d?.birthDate
+      ? typeof d.birthDate === "string"
+        ? d.birthDate.slice(0, 10)
+        : new Date(d.birthDate).toISOString().slice(0, 10)
+      : "";
 
     return {
       id: d?.id ?? "",
       empNo: (d as any)?.empNo ?? (d as any)?.employeeId ?? "",
       name: d?.name ?? "",
       branchId: d?.branchId ?? (branches?.[0]?.id ?? ""),
-      role: (d?.role ?? "STAFF").toUpperCase(), // ✅ pastikan uppercase enum
+      role: (d?.role ?? "STAFF").toUpperCase(),
       grade: (d?.grade ?? "A").toUpperCase(),
       salaryOverride: d?.salaryOverride ?? null,
       isActive: d?.isActive ?? true,
@@ -115,8 +114,7 @@ export function EmployeeFormModal({
 
   if (!open) return null;
 
-  const set = (k: keyof typeof form, v: any) =>
-    setForm((p) => ({ ...p, [k]: v }));
+  const set = (k: keyof typeof form, v: any) => setForm((p) => ({ ...p, [k]: v }));
 
   const inputCls =
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200";
@@ -142,21 +140,17 @@ export function EmployeeFormModal({
       fd.set("name", form.name.trim());
       fd.set("branchId", form.branchId);
 
-      // ✅ nilai enum yang dikirim harus uppercase
       fd.set("role", String(form.role ?? "STAFF").toUpperCase());
       fd.set("grade", String(form.grade ?? "A").toUpperCase());
 
       fd.set("isActive", form.isActive ? "true" : "false");
-      fd.set(
-        "salaryOverride",
-        form.salaryOverride === null || form.salaryOverride === ""
-          ? ""
-          : String(form.salaryOverride)
-      );
+
+      // ✅ FIX: salaryOverride adalah number|null, jangan dibandingkan dengan ""
+      fd.set("salaryOverride", form.salaryOverride === null ? "" : String(form.salaryOverride));
 
       fd.set("gender", form.gender || "");
       fd.set("birthPlace", form.birthPlace || "");
-      fd.set("birthDate", form.birthDate || "");
+      fd.set("birthDate", (form.birthDate as any) || "");
       fd.set("religion", form.religion || "");
       fd.set("education", form.education || "");
       fd.set("maritalStatus", form.maritalStatus || "");
@@ -204,7 +198,7 @@ export function EmployeeFormModal({
 
         {/* Body */}
         <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-5">
-          {/* ✅ Sticky section biar EMP No & Nama gak pernah kepotong */}
+          {/* Sticky section */}
           <div className="sticky top-0 z-10 -mx-5 mb-4 border-b border-slate-100 bg-white px-5 pb-4 pt-2">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
@@ -266,7 +260,7 @@ export function EmployeeFormModal({
             </div>
           </div>
 
-          {/* Sisanya */}
+          {/* Rest */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <p className={labelCls}>Grade</p>
@@ -286,10 +280,7 @@ export function EmployeeFormModal({
                   type="number"
                   value={form.salaryOverride ?? ""}
                   onChange={(e) =>
-                    set(
-                      "salaryOverride",
-                      e.target.value === "" ? null : Number(e.target.value)
-                    )
+                    set("salaryOverride", e.target.value === "" ? null : Number(e.target.value))
                   }
                   className={inputCls}
                 />
@@ -343,7 +334,7 @@ export function EmployeeFormModal({
               <div className="mt-1">
                 <input
                   type="date"
-                  value={form.birthDate ?? ""}
+                  value={(form.birthDate as any) ?? ""}
                   onChange={(e) => set("birthDate", e.target.value)}
                   className={inputCls}
                 />
