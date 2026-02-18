@@ -65,8 +65,8 @@ export async function getPayrollPreview(params: {
     const absencePenalty = rule?.absencePenalty ?? 0;
 
     const list = attByEmp.get(e.id) ?? [];
-    const present = list.filter((x) => x.status === "PRESENT").length;
-    const absent = list.filter((x) => x.status === "ABSENT").length;
+    const present = list.filter((x) => x.finalStatus=== "PRESENT").length;
+    const absent = list.filter((x) => x.finalStatus === "ABSENT").length;
     const lateMinutes = list.reduce((acc, x) => acc + (x.lateMinutes ?? 0), 0);
 
     const gross = present * dailyRate;
