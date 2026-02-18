@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { createContract, deleteContract } from "./actions";
 import fs from "node:fs/promises";
 import path from "node:path";
+export const dynamic = "force-dynamic";
 
 async function readMasterTemplate() {
   const templatePath = path.join(process.cwd(), "src", "templates", "kontrak-karyawan.html");
