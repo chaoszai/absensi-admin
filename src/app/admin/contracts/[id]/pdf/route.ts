@@ -255,7 +255,7 @@ export async function GET(
     }
 
     const browser = await puppeteer.launch({
-      headless: "true as any",
+      headless: true as any,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
